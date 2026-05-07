@@ -173,14 +173,18 @@ impl Session {
             })
             .collect();
 
-        let mut session = if let Architecture::Arm = target.architecture() {
+        tracing::warn!("session::attach_interface");
+        let session = if let Architecture::Arm = target.architecture() {
             Self::attach_arm_debug_interface(probe, target, attach_method, permissions, cores)?
         } else {
             Self::attach_jtag(probe, target, attach_method, permissions, cores)?
         };
 
-        session.clear_all_hw_breakpoints()?;
+        tracing::warn!("session::NO clear bp");
+        // tracing::warn!("session::clear_bp");
+        // session.clear_all_hw_breakpoints()?;
 
+        tracing::warn!("session::done");
         Ok(session)
     }
 

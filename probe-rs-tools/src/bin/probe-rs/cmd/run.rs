@@ -241,11 +241,11 @@ pub(crate) struct MonitoringOptions {
 impl Cmd {
     pub async fn run(self, client: RpcClient, utc_offset: UtcOffset) -> anyhow::Result<()> {
         // Detect run mode based on ELF file
-        let run_mode = detect_run_mode(&self)?;
+        let run_mode = detect_run_mode(&self).context("detect_run_mode")?;
 
         // TODO: Skip attach_probe & flashing, if user only wants to list tests (only possible when using embedded_test with protocol version >= 1)
 
-        let session = cli::attach_probe(&client, self.probe_options, false).await?;
+        let session = cli::attach_probe(&client, self.probe_options, false).await.context("attach_probe")?;
 
         let mut rtt_client = rtt_client(
             &session,
@@ -253,7 +253,7 @@ impl Cmd {
             &self.monitor_options,
             Some(utc_offset),
         )
-        .await?;
+        .await.context("rtt_client")?;
 
         // Flash firmware
         let boot_info = cli::flash(
@@ -264,7 +264,7 @@ impl Cmd {
             Some(&mut rtt_client),
             None,
         )
-        .await?;
+        .await.context("flash")?;
 
         // Run firmware based on run mode
         if let RunMode::Test(elf_info) = run_mode {

@@ -75,7 +75,7 @@ pub async fn attach_probe(
         client.load_chip_family(file).await?;
     }
 
-    let probe = select_probe(client, probe_options.probe.map(Into::into)).await?;
+    let probe = select_probe(client, probe_options.probe.map(Into::into)).await.context("select_probe")?;
 
     let result = client
         .attach_probe(AttachRequest {
@@ -88,7 +88,7 @@ pub async fn attach_probe(
             allow_erase_all: probe_options.allow_erase_all,
             resume_target,
         })
-        .await?;
+        .await.context("attach_probe")?;
 
     match result {
         AttachResult::Success(sessid) => Ok(SessionInterface::new(client.clone(), sessid)),

@@ -34,6 +34,7 @@ impl CC13xxCC26xx {
 /// The below code writes to the following bit
 /// `AON_PMCTL.RESETCTL.SYSRESET=1`d or its equivalent based on family
 fn reset_chip(chip: &str, probe: &mut dyn ArmMemoryInterface) {
+    tracing::warn!("reset chip start");
     // The CC family of device have a pattern where the 6th character of the device name dictates the family
     // Use this to determine the correct address to write to
     match chip.chars().nth(5).unwrap() {
@@ -56,6 +57,8 @@ fn reset_chip(chip: &str, probe: &mut dyn ArmMemoryInterface) {
             );
         }
     }
+
+    tracing::warn!("reset chip done");
 }
 
 impl ArmDebugSequence for CC13xxCC26xx {
@@ -65,6 +68,8 @@ impl ArmDebugSequence for CC13xxCC26xx {
         core_type: probe_rs_target::CoreType,
         debug_base: Option<u64>,
     ) -> Result<(), ArmError> {
+
+        tracing::warn!("reset system start");
         // Check if the previous code requested a halt before reset
         let demcr = Demcr(probe.read_word_32(Demcr::get_mmio_address())?);
 
@@ -95,6 +100,7 @@ impl ArmDebugSequence for CC13xxCC26xx {
             probe.write_word_32(Dhcsr::get_mmio_address(), value.into())?;
         }
 
+       tracing::warn!("reset system done"); 
         Ok(())
     }
 

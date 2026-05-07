@@ -142,7 +142,7 @@ impl CmsisDap {
         // Read remaining probe information.
         let packet_count = commands::send_command(&mut device, &PacketCountCommand {})?;
         let caps: Capabilities = commands::send_command(&mut device, &CapabilitiesCommand {})?;
-        tracing::debug!("Detected probe capabilities: {:?}", caps);
+        tracing::warn!("Detected probe capabilities: {:?}", caps);
         let mut swo_buffer_size = None;
         if caps.swo_uart_implemented || caps.swo_manchester_implemented {
             let swo_size = commands::send_command(&mut device, &SWOTraceBufferSizeCommand {})?;
@@ -579,7 +579,7 @@ impl CmsisDap {
                 Ok(response.transfers[count - 1].data)
             }
             Ack::NoAck => {
-                tracing::debug!(
+                tracing::warn!(
                     "Transfer status for batch item {}/{}: NACK",
                     count,
                     batch.len()
@@ -588,7 +588,7 @@ impl CmsisDap {
                 Err(DapError::NoAcknowledge.into())
             }
             Ack::Fault => {
-                tracing::debug!(
+                tracing::warn!(
                     "Transfer status for batch item {}/{}: FAULT",
                     count,
                     batch.len()
@@ -791,7 +791,7 @@ impl CmsisDap {
             })?;
 
         // Store the actually used protocol, to handle cases where the default protocol is used.
-        tracing::info!("Using protocol {}", used_protocol);
+        tracing::warn!("Using protocol {}", used_protocol);
         self.protocol = Some(used_protocol);
 
         // If operating under JTAG, try to bring the JTAG machinery out of reset. Ignore errors
@@ -932,7 +932,7 @@ impl DebugProbe for CmsisDap {
     /// Enters debug mode.
     #[tracing::instrument(skip(self))]
     fn attach(&mut self) -> Result<(), DebugProbeError> {
-        tracing::debug!("Attaching to target system (clock = {}kHz)", self.speed_khz);
+        tracing::warn!("Attaching to target system (clock = {}kHz)", self.speed_khz);
 
         // Run connect sequence (may already be done earlier via swj operations)
         self.connect_if_needed()?;
@@ -965,6 +965,7 @@ impl DebugProbe for CmsisDap {
 
     /// Leave debug mode.
     fn detach(&mut self) -> Result<(), crate::Error> {
+        tracing::warn!("detach");
         self.process_batch()?;
 
         if self.swo_active {
@@ -989,6 +990,7 @@ impl DebugProbe for CmsisDap {
     }
 
     fn select_protocol(&mut self, protocol: WireProtocol) -> Result<(), DebugProbeError> {
+        tracing::warn!("requesting protocol: {:?}", protocol);
         match protocol {
             WireProtocol::Jtag if self.capabilities.jtag_implemented => {
                 self.protocol = Some(WireProtocol::Jtag);
@@ -1116,6 +1118,7 @@ impl RawDapAccess for CmsisDap {
         address: RegisterAddress,
         values: &[u32],
     ) -> Result<(), ArmError> {
+        tracing::debug!("write_block");
         self.process_batch()?;
 
         // the overhead for a single packet is 6 bytes
@@ -1156,6 +1159,7 @@ impl RawDapAccess for CmsisDap {
         address: RegisterAddress,
         values: &mut [u32],
     ) -> Result<(), ArmError> {
+        tracing::debug!("read_block");
         self.process_batch()?;
 
         // the overhead for a single packet is 6 bytes
@@ -1194,6 +1198,7 @@ impl RawDapAccess for CmsisDap {
     }
 
     fn raw_flush(&mut self) -> Result<(), ArmError> {
+        tracing::debug!("flush");
         self.process_batch()?;
         Ok(())
     }
@@ -1392,7 +1397,7 @@ impl SwoAccess for CmsisDap {
 
 impl Drop for CmsisDap {
     fn drop(&mut self) {
-        tracing::debug!("Detaching from CMSIS-DAP probe");
+        tracing::warn!("Detaching from CMSIS-DAP probe");
         // We ignore the error cases as we can't do much about it anyways.
         let _ = self.process_batch();
 

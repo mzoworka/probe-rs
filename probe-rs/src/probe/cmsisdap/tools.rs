@@ -329,7 +329,7 @@ fn reject_probe_by_version(
     device_version: u16,
 ) -> Result<(), ProbeCreationError> {
     let denylist = [
-        |vid, pid, version| (vid == 0x2e8a && pid == 0x000c && version < 0x0220).then_some("2.2.0"), // Old RPi debugprobe
+        |vid, pid, version| (vid == 0x2e8a && pid == 0x000c && version < 0x0200).then_some("2.0.0"), // Old RPi debugprobe
     ];
 
     tracing::debug!(

@@ -87,7 +87,7 @@ pub enum ArmError {
     #[ignore_extra_doc_attributes]
     MissingPermissions(String),
 
-    /// An error occurred in the communication with an access port or debug port.
+    /// An error occurred in the communication with an access port or debug port ({0:?}).
     Dap(#[from] DapError),
 
     /// The debug probe encountered an error.
